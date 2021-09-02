@@ -26,7 +26,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.""")
     parser.add_argument("--skip-bootloader", "-s", action="store_true", help="Skip bootloader flashing")
     parser.add_argument("--key", "-k", help="What key should be set?")
-    parser.add_argument("--fblock", "-f", help="Set FBLOCK")
+    parser.add_argument("--fblock", "-f", action="store_true", help="Set FBLOCK to False")
     parser.add_argument("--bootloader", "-b", help="Specify bootloader name")
     args = parser.parse_args()
 
@@ -67,7 +67,7 @@ def flash_images(data: dict):
     success("Bootloader uploaded.")
 
 
-def write_nvme(key: str):
+def write_nvme(key: str, fblock: bool):
     info("Waiting for device...")
     m = hashlib.sha256()
     m.update(key.encode())
@@ -76,6 +76,9 @@ def write_nvme(key: str):
     fb.connect()
     fb.write_nvme(b"USRKEY", m.digest())
     success("Bootloader code updated")
+    if args.fblock:
+	    fb.write_nvme(b"FBLOCK", b'\0')
+	    success("FBLOCK set to 0")
     info("Rebooting device...")
     fb.reboot()
 
@@ -87,7 +90,7 @@ def main():
             data = json.load(json_file)
             data["name"] = args.bootloader
         flash_images(data)
-    write_nvme(args.key)
+    write_nvme(args.key, args.fblock)
 
 
 if __name__ == '__main__':

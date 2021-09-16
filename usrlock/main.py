@@ -76,7 +76,7 @@ def write_nvme(key: str, fblock: bool):
     fb.connect()
     fb.write_nvme(b"USRKEY", m.digest())
     success("Bootloader code updated")
-    if args.fblock:
+    if fblock:
 	    fb.write_nvme(b"FBLOCK", b'\0')
 	    success("FBLOCK set to 0")
     info("Rebooting device...")
